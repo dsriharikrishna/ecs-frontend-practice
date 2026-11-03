@@ -133,17 +133,19 @@ ECS task CPU/memory and ALB/NAT/VPC endpoint/CloudWatch charges continue while r
 
 The workflow in `.github/workflows/deploy-ecs.yml` runs lint, tests, and a frontend build for pull requests and pushes to `main`. A successful push to `main` builds an `linux/amd64` image tagged with the commit SHA, pushes it to ECR, registers a new revision of the configured ECS task definition with that image, and updates the ECS service. It also supports manual runs from `main`. ECR can therefore use immutable tags; the workflow never overwrites an image tag.
 
-Before deploying, create these **Actions → Variables** in the GitHub repository:
+Before deploying, create these **Actions → Secrets and variables → Actions → Secrets** in the GitHub repository. The workflow reads all seven values from `secrets`:
 
-| Variable | Value |
+| Secret | Value |
 |---|---|
-| `AWS_ROLE_ARN` | ARN of the IAM role GitHub Actions assumes through OIDC |
+| `AWS_ROLE_ARN` | IAM role ARN GitHub Actions assumes through OIDC, in the form `arn:aws:iam::123456789012:role/GitHubActionsDeploy` (use the actual partition, account ID, and role name) |
 | `AWS_REGION` | AWS region containing the ECR repository and ECS service |
 | `ECR_REPOSITORY` | ECR repository name, for example `ecs-frontend-practice` |
 | `ECS_CLUSTER` | ECS cluster name, for example `ecs-frontend-cluster` |
 | `ECS_SERVICE` | ECS service name, for example `ecs-frontend-service` |
 | `ECS_TASK_DEFINITION` | Existing ECS task-definition family or revision |
 | `ECS_CONTAINER_NAME` | Container name inside that task definition, for example `frontend` |
+
+Set `AWS_ROLE_ARN` to the role ARN itself, not the role name, an STS assumed-role ARN, or a value prefixed with `AWS_ROLE_ARN=`. The workflow checks the ARN format before calling AWS.
 
 Configure the IAM role's OIDC trust policy to trust only this GitHub repository's `main` branch (`repo:OWNER/REPOSITORY:ref:refs/heads/main`). Grant only the permissions needed to authenticate to ECR and push images to the specified repository, describe/register the task definition, update/describe the specified ECS service, and pass its task and execution roles to ECS. Do not add AWS access keys or other credentials to the repository. Pull requests run verification only and do not receive AWS deployment credentials.
 

@@ -69,6 +69,10 @@ jobs:
               exit 1
             fi
           done
+          if [[ ! "$AWS_ROLE_ARN" =~ ^arn:aws(-us-gov|-cn)?:iam::[0-9]{12}:role/[^[:space:]]+ ]]; then
+            echo "::error::AWS_ROLE_ARN must be an IAM role ARN, such as arn:aws:iam::123456789012:role/GitHubActionsDeploy."
+            exit 1
+          fi
 
       - name: Configure AWS credentials with OIDC
         uses: aws-actions/configure-aws-credentials@v4
